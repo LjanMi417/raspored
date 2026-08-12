@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Raspored gledanja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#101119;--panel:#1A1C27;--panel-2:#212433;--line:#2E3243;--line-soft:#232634;
+  --paper:#E9E7E0;--muted:#868CA3;--muted-2:#5D6379;
+  --amber:#E8A33D;--teal:#57BFA2;--rose:#D96A8A;
+  --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"Roboto Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:15px;
+  line-height:1.45;padding-bottom:40px;overscroll-behavior-y:none}
+.wrap{max-width:760px;margin:0 auto}
+header{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,#171925,#14161F);
+  border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 14px 0}
+header::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+.hrow{display:flex;align-items:baseline;gap:10px;position:relative}
+.brand{font-weight:900;font-size:15px;letter-spacing:.16em;text-transform:uppercase;margin:0}
+.brand span{color:var(--amber)}
+.count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.bar{position:relative;height:3px;background:var(--line-soft);border-radius:2px;margin:9px 0 0;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--teal);transition:width .35s cubic-bezier(.4,0,.2,1)}
+.tabs{display:flex;gap:2px;position:relative;margin-top:9px}
+.tab{appearance:none;border:0;background:transparent;color:var(--muted);font-family:var(--sans);
+  font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:9px 13px;
+  cursor:pointer;border-bottom:2px solid transparent}
+.tab[aria-selected="true"]{color:var(--paper);border-bottom-color:var(--amber)}
+main{padding:0 14px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--muted-2);margin:20px 0 8px;display:flex;align-items:center;gap:9px}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.card.hero{border-color:rgba(232,163,61,.4);background:var(--panel-2)}
+.card.done{opacity:.45}
+.chead{display:flex;align-items:center;gap:10px;width:100%;padding:12px 13px;background:transparent;
+  border:0;cursor:pointer;text-align:left;color:inherit;font-family:inherit}
+.gno{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;flex-shrink:0}
+.card.hero .gno{color:var(--amber)}
+.gmeta{margin-left:auto;display:flex;align-items:center;gap:11px;flex-shrink:0}
+.frac{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.frac.full{color:var(--teal)}
+.sum{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+.chev{width:9px;height:9px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s;flex-shrink:0}
+.card.open .chev{transform:rotate(-135deg) translate(-2px,-2px)}
+.cbody{border-top:1px solid var(--line-soft);padding:3px 0 7px}
+.t{display:flex;align-items:flex-start;gap:2px;font-size:14px;line-height:1.35}
+.t:hover{background:rgba(255,255,255,.02)}
+.tick{background:transparent;border:0;padding:9px 4px 9px 13px;cursor:pointer;flex-shrink:0}
+.box{width:17px;height:17px;border:1.5px solid var(--muted-2);border-radius:4px;position:relative;
+  transition:.15s;margin-top:2px}
+.t.on .box{background:var(--teal);border-color:var(--teal)}
+.t.on .box::after{content:"";position:absolute;left:5px;top:1.5px;width:4px;height:8px;
+  border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(42deg)}
+.go{flex:1;min-width:0;display:flex;align-items:flex-start;gap:9px;padding:9px 13px 9px 7px;
+  background:transparent;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer;
+  text-decoration:none}
+.go:active{background:rgba(255,255,255,.05)}
+.tname{flex:1;min-width:0}
+.t.on .tname{color:var(--muted-2);text-decoration:line-through;text-decoration-thickness:1px}
+.link .tname{border-bottom:1px solid var(--line);display:inline}
+.arw{font-family:var(--mono);font-size:11px;color:var(--muted-2);margin-left:5px}
+.ready .arw{color:var(--amber)}
+.ep{font-family:var(--mono);font-size:11px;color:var(--muted-2);margin-left:7px;white-space:nowrap}
+.score{font-family:var(--mono);font-size:12px;color:var(--muted);flex-shrink:0;margin-top:1px}
+.flag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--rose);border:1px solid rgba(217,106,138,.45);
+  border-radius:3px;padding:1px 5px;margin-left:7px;vertical-align:1px}
+.t.unk .box{border-style:dashed}
+.t.unk .tname{font-style:italic;color:var(--muted)}
+.act{display:block;margin:5px 13px 3px;padding:9px;width:calc(100% - 26px);background:transparent;
+  border:1px dashed var(--line);border-radius:7px;color:var(--muted);font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.act:active{background:rgba(255,255,255,.04);color:var(--paper)}
+.toolbar{display:flex;gap:7px;margin:14px 0 2px;flex-wrap:wrap;align-items:center}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;color:var(--muted);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:7px 13px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
+.chip.go-link{border-color:rgba(232,163,61,.5);color:var(--amber)}
+.chip:disabled{opacity:.5;cursor:default}
+.sync{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);letter-spacing:.06em}
+.trow{border-bottom:1px solid var(--line-soft)}
+.tprog{display:flex;align-items:center;gap:8px;margin-top:5px}
+.mini{flex:1;height:2px;background:var(--line-soft);border-radius:2px;overflow:hidden;max-width:120px}
+.mini i{display:block;height:100%;background:var(--teal)}
+.mal{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-top:4px}
+.mal b{color:var(--teal);font-weight:400}
+.eps{display:flex;flex-wrap:wrap;gap:5px;padding:2px 13px 12px 42px}
+.epc{font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:5px;cursor:pointer;
+  background:transparent;border:1px solid var(--line);color:var(--muted)}
+.epc.on{background:rgba(87,191,162,.14);border-color:var(--teal);color:var(--teal)}
+.fix{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--line);border-radius:4px;color:var(--muted-2);
+  padding:3px 7px;cursor:pointer;margin:0 13px 12px 42px}
+.note{font-size:12.5px;color:var(--muted);line-height:1.6;border-left:2px solid var(--line);
+  padding-left:11px;margin:20px 0 22px}
+.note b{color:var(--paper);font-weight:700}
+.note code{font-family:var(--mono);font-size:11.5px;color:var(--amber)}
+.empty{color:var(--muted-2);font-size:13px;padding:26px 2px;text-align:center}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hrow">
+    <h1 class="brand">Raspored<span>.</span></h1>
+    <div class="count" id="count">—</div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-view="grupe">Grupe</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="naslovi">Naslovi</button>
+  </div>
+</header>
+<main>
+  <div class="toolbar">
+    <button class="chip go-link" id="sync">Poveži sa MAL-om</button>
+    <button class="chip" id="exp">Izvezi</button>
+    <button class="chip" id="imp">Uvezi</button>
+    <span class="sync" id="syncmsg"></span>
+  </div>
+  <section id="v-grupe">
+    <div class="eyebrow">Sledeće na redu</div>
+    <div id="hero"></div>
+    <div class="eyebrow">Sve grupe</div>
+    <div class="toolbar">
+      <button class="chip" id="f-hide" aria-pressed="false">Sakrij završene</button>
+      <button class="chip" id="f-open" aria-pressed="false">Otvori sve</button>
+    </div>
+    <div id="groups"></div>
+  </section>
+  <section id="v-naslovi" class="hidden">
+    <div class="toolbar">
+      <button class="chip" id="s-score" aria-pressed="true">Po oceni</button>
+      <button class="chip" id="s-name" aria-pressed="false">Po nazivu</button>
+      <button class="chip" id="s-left" aria-pressed="false">Po preostalom</button>
+    </div>
+    <div id="titles"></div>
+  </section>
+  <div class="note" id="note"></div>
+  <button class="act" id="reset" style="margin:0 0 30px;width:100%">Poništi sav napredak</button>
+</main>
+</div>
+<script>
+const G=[[1,4574,[[688,"Seirei Gensouki 2",1,10],[705,"Kimi wa Meido-sama.",1,9],[707,"Nageki no Bourei wa Intai shitai",1,12],[787,"Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo 2nd Season",1,1],[815,"Ao no Hako",1,12],[872,"Chi. Chikyuu no Undou ni Tsuite",1,14]]],[2,4574,[[566,"Uzumaki",1,3],[740,"Maou 2099",1,11],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",1,12],[797,"Ranma ½ (2024)",1,12],[840,"Dandadan",1,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",1,9]]],[3,4574,[[655,"Hitoribocchi no Isekai Kouryaku",1,11],[714,"Ameku Takao no Suiri Karte",1,1],[750,"Blue Lock vs. U-20 Japan",1,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",1,10],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",1,12],[872,"Chi. Chikyuu no Undou ni Tsuite",2,14]]],[4,4574,[[654,"Kuroiwa Medaka ni Watashi no Kawaii ga Tsuujinai",1,1],[705,"Kimi wa Meido-sama.",2,9],[718,"Raise wa Tanin ga Ii",1,11],[815,"Ao no Hako",2,12],[840,"Dandadan",2,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",2,9]]],[5,4575,[[662,"Izure Saikyou no Renkinjutsushi?",1,2],[707,"Nageki no Bourei wa Intai shitai",2,12],[719,null,1,1],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",2,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",2,12],[872,"Chi. Chikyuu no Undou ni Tsuite",3,14]]],[6,4574,[[655,"Hitoribocchi no Isekai Kouryaku",2,11],[705,"Kimi wa Meido-sama.",3,9],[734,"Rekishi ni Nokoru Akujo ni Naru zo",1,9],[797,"Ranma ½ (2024)",2,12],[815,"Ao no Hako",3,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",1,12]]],[7,4574,[[566,"Uzumaki",2,3],[750,"Blue Lock vs. U-20 Japan",2,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",2,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",3,12],[840,"Dandadan",3,12],[872,"Chi. Chikyuu no Undou ni Tsuite",4,14]]],[8,4574,[[655,"Hitoribocchi no Isekai Kouryaku",3,11],[688,"Seirei Gensouki 2",2,10],[740,"Maou 2099",2,11],[797,"Ranma ½ (2024)",3,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",3,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",2,12]]],[9,4574,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",1,8],[718,"Raise wa Tanin ga Ii",2,11],[736,"Akuyaku Reijou Tensei Ojisan",1,1],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",3,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",4,12],[872,"Chi. Chikyuu no Undou ni Tsuite",5,14]]],[10,4575,[[655,"Hitoribocchi no Isekai Kouryaku",4,11],[705,"Kimi wa Meido-sama.",4,9],[750,"Blue Lock vs. U-20 Japan",3,13],[797,"Ranma ½ (2024)",4,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",4,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",3,9]]],[11,4574,[[688,"Seirei Gensouki 2",3,10],[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",2,8],[740,"Maou 2099",3,11],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",4,10],[815,"Ao no Hako",4,12],[872,"Chi. Chikyuu no Undou ni Tsuite",6,14]]],[12,4575,[[633,"Fuguushoku \"Kanteishi\" ga Jitsu wa Saikyou Datta",1,1],[658,"Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi",1,2],[750,"Blue Lock vs. U-20 Japan",4,13],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",5,12],[840,"Dandadan",4,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",3,12]]],[13,4575,[[655,"Hitoribocchi no Isekai Kouryaku",5,11],[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",3,8],[734,"Rekishi ni Nokoru Akujo ni Naru zo",2,9],[797,"Ranma ½ (2024)",5,12],[815,"Ao no Hako",5,12],[872,"Chi. Chikyuu no Undou ni Tsuite",7,14]]],[14,4574,[[705,"Kimi wa Meido-sama.",5,9],[707,"Nageki no Bourei wa Intai shitai",3,12],[718,"Raise wa Tanin ga Ii",3,11],[750,"Blue Lock vs. U-20 Japan",5,13],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",6,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",4,12]]],[15,4575,[[577,"Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite",1,2],[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",4,8],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",5,12],[815,"Ao no Hako",6,12],[840,"Dandadan",5,12],[852,"Ore dake Level Up na Ken Season 2: Arise from the Shadow",1,1]]],[16,4574,[[707,"Nageki no Bourei wa Intai shitai",4,12],[718,"Raise wa Tanin ga Ii",4,11],[734,"Rekishi ni Nokoru Akujo ni Naru zo",3,9],[750,"Blue Lock vs. U-20 Japan",6,13],[797,"Ranma ½ (2024)",6,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",5,12]]],[17,4575,[[655,"Hitoribocchi no Isekai Kouryaku",6,11],[705,"Kimi wa Meido-sama.",6,9],[740,"Maou 2099",4,11],[763,"Wind Breaker season 2",1,1],[840,"Dandadan",6,12],[872,"Chi. Chikyuu no Undou ni Tsuite",8,14]]],[18,4575,[[688,"Seirei Gensouki 2",4,10],[707,"Nageki no Bourei wa Intai shitai",5,12],[734,"Rekishi ni Nokoru Akujo ni Naru zo",4,9],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",6,12],[815,"Ao no Hako",7,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",4,9]]],[19,4575,[[655,"Hitoribocchi no Isekai Kouryaku",7,11],[718,"Raise wa Tanin ga Ii",5,11],[740,"Maou 2099",5,11],[750,"Blue Lock vs. U-20 Japan",7,13],[840,"Dandadan",7,12],[872,"Chi. Chikyuu no Undou ni Tsuite",9,14]]],[20,4574,[[577,"Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite",2,2],[734,"Rekishi ni Nokoru Akujo ni Naru zo",5,9],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",5,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",7,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",7,12],[891,"Kusuriya no Hitorigoto 2nd Season",1,1]]],[21,4575,[[655,"Hitoribocchi no Isekai Kouryaku",8,11],[705,"Kimi wa Meido-sama.",7,9],[718,"Raise wa Tanin ga Ii",6,11],[815,"Ao no Hako",8,12],[840,"Dandadan",8,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",5,9]]],[22,4575,[[662,"Izure Saikyou no Renkinjutsushi?",2,2],[734,"Rekishi ni Nokoru Akujo ni Naru zo",6,9],[750,"Blue Lock vs. U-20 Japan",8,13],[772,"Fire Force season 3",1,1],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",8,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",6,12]]],[23,4574,[[658,"Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi",2,2],[688,"Seirei Gensouki 2",5,10],[749,"Kono Kaisha ni Suki na Hito ga Imasu",1,1],[797,"Ranma ½ (2024)",7,12],[840,"Dandadan",9,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",6,9]]],[24,4575,[[634,"Around 40 Otoko no Isekai Tsuuhan",1,1],[740,"Maou 2099",6,11],[750,"Blue Lock vs. U-20 Japan",9,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",6,10],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",8,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",7,12]]],[25,4575,[[674,"Class no Daikirai na Joshi to Kekkon suru Koto ni Natta.",1,1],[707,"Nageki no Bourei wa Intai shitai",6,12],[718,"Raise wa Tanin ga Ii",7,11],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",9,12],[815,"Ao no Hako",9,12],[872,"Chi. Chikyuu no Undou ni Tsuite",10,14]]],[26,4575,[[688,"Seirei Gensouki 2",6,10],[734,"Rekishi ni Nokoru Akujo ni Naru zo",7,9],[740,"Maou 2099",7,11],[750,"Blue Lock vs. U-20 Japan",10,13],[795,"Jibaku Shounen Hanako-kun 2",1,1],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",8,12]]],[27,4575,[[655,"Hitoribocchi no Isekai Kouryaku",9,11],[707,"Nageki no Bourei wa Intai shitai",7,12],[718,"Raise wa Tanin ga Ii",8,11],[797,"Ranma ½ (2024)",8,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",9,12],[872,"Chi. Chikyuu no Undou ni Tsuite",11,14]]],[28,4574,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",5,8],[734,"Rekishi ni Nokoru Akujo ni Naru zo",8,9],[750,"Blue Lock vs. U-20 Japan",11,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",7,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",10,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",7,9]]],[29,4574,[[705,"Kimi wa Meido-sama.",8,9],[707,"Nageki no Bourei wa Intai shitai",8,12],[740,"Maou 2099",8,11],[757,"Zenshuu.",1,1],[797,"Ranma ½ (2024)",9,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",9,12]]],[30,4574,[[655,"Hitoribocchi no Isekai Kouryaku",10,11],[688,"Seirei Gensouki 2",7,10],[718,"Raise wa Tanin ga Ii",9,11],[815,"Ao no Hako",10,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",10,12],[872,"Chi. Chikyuu no Undou ni Tsuite",12,14]]],[31,4574,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",6,8],[707,"Nageki no Bourei wa Intai shitai",9,12],[740,"Maou 2099",9,11],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",8,10],[826,"Dr. Stone: Science Future",1,1],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",8,9]]],[32,4574,[[566,"Uzumaki",3,3],[688,"Seirei Gensouki 2",8,10],[797,"Ranma ½ (2024)",10,12],[815,"Ao no Hako",11,12],[840,"Dandadan",10,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",10,12]]],[33,4575,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",7,8],[707,"Nageki no Bourei wa Intai shitai",10,12],[718,"Raise wa Tanin ga Ii",10,11],[750,"Blue Lock vs. U-20 Japan",12,13],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",11,12],[872,"Chi. Chikyuu no Undou ni Tsuite",13,14]]],[34,4574,[[688,"Seirei Gensouki 2",9,10],[705,"Kimi wa Meido-sama.",9,9],[716,"Honey Lemon Soda",1,1],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",9,10],[840,"Dandadan",11,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",11,12]]],[35,4574,[[664,"Guild no Uketsukejou desu ga, Zangyou wa Iya nanode Boss wo Solo Toubatsu Shiyou to Omoimasu",1,1],[740,"Maou 2099",10,11],[742,"Watashi no Shiawase na Kekkon 2nd Season",1,1],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",11,12],[797,"Ranma ½ (2024)",11,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",9,9]]],[36,4575,[[688,"Seirei Gensouki 2",10,10],[707,"Nageki no Bourei wa Intai shitai",11,12],[734,"Rekishi ni Nokoru Akujo ni Naru zo",9,9],[759,"Sakamoto Days",1,1],[815,"Ao no Hako",12,12],[872,"Chi. Chikyuu no Undou ni Tsuite",14,14]]],[37,4575,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",8,8],[718,"Raise wa Tanin ga Ii",11,11],[740,"Maou 2099",11,11],[750,"Blue Lock vs. U-20 Japan",13,13],[797,"Ranma ½ (2024)",12,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",12,12]]],[38,4574,[[655,"Hitoribocchi no Isekai Kouryaku",11,11],[707,"Nageki no Bourei wa Intai shitai",12,12],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",10,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",12,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",12,12],[840,"Dandadan",12,12]]]];
+const dec=s=>(s/100).toFixed(2);
+const SKEY="raspored:v2", MKEY="raspored:mal";
+let done=new Set(), memD=null, memM=null, openSet=new Set(), openT=new Set(), mal={};
+let hideDone=false, openAll=false, sortBy="score", syncing=false;
+
+const hasWS=typeof window.storage!=="undefined"&&window.storage&&typeof window.storage.get==="function";
+let hasLS=false;try{localStorage.setItem("__t","1");localStorage.removeItem("__t");hasLS=true}catch(e){}
+async function sGet(k,f){
+  if(hasWS){try{const r=await window.storage.get(k);if(r)return JSON.parse(r.value)}catch(e){}}
+  if(hasLS){try{const v=localStorage.getItem(k);if(v!==null)return JSON.parse(v)}catch(e){}}
+  const m=(k===SKEY?memD:memM);return m!=null?m:f;
+}
+async function sSet(k,v){
+  if(k===SKEY)memD=v;else memM=v;
+  if(hasWS){try{await window.storage.set(k,JSON.stringify(v))}catch(e){}}
+  if(hasLS){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+}
+const persist=()=>sSet(SKEY,[...done]);
+const persistMal=()=>sSet(MKEY,mal);
+const id=(g,i)=>g+"."+i;
+const gDone=g=>g[2].filter((_,i)=>done.has(id(g[0],i))).length;
+
+const titleIndex=(()=>{
+  const m=new Map();
+  G.forEach(g=>g[2].forEach((r,i)=>{
+    const k=r[1]||("??"+r[0]);
+    if(!m.has(k))m.set(k,{key:k,name:r[1],score:r[0],unk:!r[1],slots:[]});
+    m.get(k).slots.push([g[0],i,r[2]]);
+  }));
+  return [...m.values()];
+})();
+const resolvable=titleIndex.filter(t=>!t.unk);
+
+/* ---- Jikan ---- */
+const norm=s=>(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+function sim(a,b){
+  const A=new Set(norm(a).split(" ")), B=norm(b).split(" ");
+  if(!B.length)return 0;
+  return B.filter(w=>A.has(w)).length/Math.max(A.size,B.length);
+}
+async function lookup(name){
+  const q=name.replace(/½/g,"1 2").replace(/\s*\(\d{4}\)\s*/," ").replace(/["]/g,"");
+  const r=await fetch("https://api.jikan.moe/v4/anime?limit=6&q="+encodeURIComponent(q));
+  if(!r.ok)throw new Error(r.status);
+  const j=await r.json();
+  if(!j.data||!j.data.length)return null;
+  let best=null,bs=-1;
+  for(const a of j.data){
+    const cands=[a.title,a.title_english,a.title_japanese,...(a.titles||[]).map(t=>t.title),...(a.title_synonyms||[])];
+    const s=Math.max(...cands.filter(Boolean).map(c=>sim(name,c)));
+    if(s>bs){bs=s;best=a}
+  }
+  return best?{id:best.mal_id,t:best.title}:null;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function syncAll(){
+  if(syncing)return; syncing=true;
+  const btn=document.getElementById("sync"), msg=document.getElementById("syncmsg");
+  btn.disabled=true;
+  const todo=resolvable.filter(t=>!mal[t.key]);
+  if(!todo.length){msg.textContent="Sve je već povezano.";btn.disabled=false;syncing=false;return}
+  let ok=0,fail=0;
+  for(let i=0;i<todo.length;i++){
+    msg.textContent=`${i+1}/${todo.length} …`;
+    try{const r=await lookup(todo[i].name);if(r){mal[todo[i].key]=r;ok++}else fail++}
+    catch(e){fail++;await sleep(1500)}
+    await sleep(1200);
+    if(i%5===0){persistMal();render()}
+  }
+  persistMal();render();
+  msg.textContent=`Povezano ${ok}${fail?`, neuspešno ${fail}`:""}.`;
+  btn.disabled=false;syncing=false;
+}
+const malUrl=k=>mal[k]?`https://myanimelist.net/anime/${mal[k].id}`:null;
+async function openTitle(k,name){
+  const u=malUrl(k);
+  if(u)return window.open(u,"_blank","noopener");
+  const w=window.open("about:blank","_blank");
+  try{const r=await lookup(name);
+    if(r){mal[k]=r;persistMal();render();if(w)w.location=`https://myanimelist.net/anime/${r.id}`;else window.open(`https://myanimelist.net/anime/${r.id}`,"_blank")}
+    else if(w)w.location="https://myanimelist.net/search/all?q="+encodeURIComponent(name);
+  }catch(e){if(w)w.location="https://myanimelist.net/search/all?q="+encodeURIComponent(name)}
+}
+
+/* ---- render ---- */
+function rowHTML(g,r,i){
+  const on=done.has(id(g[0],i)), unk=!r[1], k=r[1]||("??"+r[0]), u=unk?null:malUrl(k);
+  const inner=`<span class="tname">${unk?"Naslov nije u spisku":r[1]}${unk?`<span class="flag">${r[0]}</span>`:""}
+      ${r[3]>1?`<span class="ep">${r[2]}/${r[3]}</span>`:""}${unk?"":`<span class="arw">↗</span>`}</span>
+    <span class="score">${dec(r[0])}</span>`;
+  return `<div class="t ${on?"on":""} ${unk?"unk":""} ${u?"ready":""}">
+    <button class="tick" data-slot="${id(g[0],i)}" aria-label="Odgledano"><span class="box"></span></button>
+    ${unk?`<span class="go">${inner}</span>`
+      :u?`<a class="go link" href="${u}" target="_blank" rel="noopener">${inner}</a>`
+        :`<button class="go link" data-open="${encodeURIComponent(k)}">${inner}</button>`}
+  </div>`;
+}
+function cardHTML(g,hero){
+  const d=gDone(g), open=hero||openSet.has(g[0]);
+  return `<div class="card ${hero?"hero":""} ${d===6&&!hero?"done":""} ${open?"open":""}">
+    <button class="chead" data-toggle="${g[0]}">
+      <span class="gno">GRUPA ${String(g[0]).padStart(2,"0")}</span>
+      <span class="gmeta"><span class="frac ${d===6?"full":""}">${d}/6</span>
+      <span class="sum">Σ ${dec(g[1])}</span></span><span class="chev"></span></button>
+    ${open?`<div class="cbody">${g[2].map((r,i)=>rowHTML(g,r,i)).join("")}
+      <button class="act" data-all="${g[0]}">${d===6?"Poništi grupu":"Označi celu grupu"}</button></div>`:""}
+  </div>`;
+}
+function render(){
+  const tot=G.reduce((a,g)=>a+g[2].length,0), d=done.size;
+  document.getElementById("count").textContent=`${d}/${tot} odgledano`;
+  document.getElementById("bar").style.width=(d/tot*100)+"%";
+  const linked=resolvable.filter(t=>mal[t.key]).length;
+  document.getElementById("sync").textContent=linked?`MAL ${linked}/${resolvable.length}`:"Poveži sa MAL-om";
+
+  const hero=G.find(g=>gDone(g)<6);
+  document.getElementById("hero").innerHTML=hero?cardHTML(hero,true):`<div class="empty">Sve grupe su završene.</div>`;
+  let list=G.filter(g=>!hero||g[0]!==hero[0]);
+  if(hideDone)list=list.filter(g=>gDone(g)<6);
+  document.getElementById("groups").innerHTML=list.length?list.map(g=>cardHTML(g,false)).join(""):`<div class="empty">Nema grupa za prikaz.</div>`;
+
+  const ts=titleIndex.slice();
+  ts.sort(sortBy==="score"?(a,b)=>b.score-a.score
+    :sortBy==="name"?(a,b)=>(a.name||"").localeCompare(b.name||"")
+    :(a,b)=>{const l=x=>x.slots.filter(s=>!done.has(id(s[0],s[1]))).length;return l(b)-l(a)||b.score-a.score});
+  document.getElementById("titles").innerHTML=ts.map(t=>{
+    const w=t.slots.filter(s=>done.has(id(s[0],s[1]))).length, n=t.slots.length, op=openT.has(t.key);
+    const m=mal[t.key], u=malUrl(t.key);
+    const inner=`<span class="tname">${t.unk?"Naslov nije u spisku "+t.score:t.name}${t.unk?"":`<span class="arw">↗</span>`}
+        <span class="tprog"><span class="ep">${w}/${n}</span><span class="mini"><i style="width:${w/n*100}%"></i></span></span>
+        ${m?`<span class="mal">MAL: <b>${m.t}</b></span>`:t.unk?"":`<span class="mal">nije povezano</span>`}</span>
+      <span class="score">${dec(t.score)}</span>`;
+    return `<div class="trow">
+      <div class="t ${w===n?"on":""} ${t.unk?"unk":""} ${u?"ready":""}">
+        <button class="tick" data-title="${encodeURIComponent(t.key)}" aria-label="Prikaži epizode">
+          <span class="box" style="${w>0&&w<n?"background:var(--amber);border-color:var(--amber)":""}"></span></button>
+        ${t.unk?`<span class="go">${inner}</span>`
+          :u?`<a class="go link" href="${u}" target="_blank" rel="noopener">${inner}</a>`
+            :`<button class="go link" data-open="${encodeURIComponent(t.key)}">${inner}</button>`}
+      </div>
+      ${op?`<div class="eps">${t.slots.map(s=>`<button class="epc ${done.has(id(s[0],s[1]))?"on":""}" data-slot="${id(s[0],s[1])}">G${s[0]} · ${s[2]}</button>`).join("")}</div>
+        ${t.unk?"":`<button class="fix" data-fix="${encodeURIComponent(t.key)}">Ispravi MAL link</button>`}`:""}
+    </div>`;
+  }).join("");
+}
+document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]");
+  if(o){e.preventDefault();const k=decodeURIComponent(o.dataset.open);
+    const t=titleIndex.find(x=>x.key===k);return openTitle(k,t.name)}
+  const f=e.target.closest("[data-fix]");
+  if(f){const k=decodeURIComponent(f.dataset.fix);
+    const v=prompt("Nalepi MAL link ili unesi ID:",mal[k]?`https://myanimelist.net/anime/${mal[k].id}`:"");
+    if(v){const m=v.match(/(\d{2,7})/);if(m){mal[k]={id:m[1],t:"ručno ("+m[1]+")"};persistMal();render()}}
+    return}
+  const h=e.target.closest("[data-toggle]");
+  if(h){const i=+h.dataset.toggle;openSet.has(i)?openSet.delete(i):openSet.add(i);return render()}
+  const a=e.target.closest("[data-all]");
+  if(a){const g=G.find(x=>x[0]===+a.dataset.all),full=gDone(g)===6;
+    g[2].forEach((_,i)=>full?done.delete(id(g[0],i)):done.add(id(g[0],i)));return persist(),render()}
+  const s=e.target.closest("[data-slot]");
+  if(s){const k=s.dataset.slot;done.has(k)?done.delete(k):done.add(k);return persist(),render()}
+  const t=e.target.closest("[data-title]");
+  if(t){const k=decodeURIComponent(t.dataset.title);openT.has(k)?openT.delete(k):openT.add(k);return render()}
+});
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
+  document.getElementById("v-grupe").classList.toggle("hidden",t.dataset.view!=="grupe");
+  document.getElementById("v-naslovi").classList.toggle("hidden",t.dataset.view!=="naslovi");
+  scrollTo(0,0);
+});
+document.getElementById("sync").onclick=syncAll;
+document.getElementById("exp").onclick=()=>{
+  prompt("Kopiraj ovaj tekst, pa ga na drugom uređaju nalepi u Uvezi:",JSON.stringify({d:[...done],m:mal}));
+};
+document.getElementById("imp").onclick=()=>{
+  const v=prompt("Nalepi izvezeni tekst:");if(!v)return;
+  try{const o=JSON.parse(v);
+    if(Array.isArray(o.d)){done=new Set(o.d);persist()}
+    if(o.m&&typeof o.m==="object"){mal=o.m;persistMal()}
+    render();document.getElementById("syncmsg").textContent="Uvezeno.";
+  }catch(e){alert("Tekst nije ispravan.")}
+};
+document.getElementById("f-hide").onclick=e=>{hideDone=!hideDone;e.currentTarget.setAttribute("aria-pressed",hideDone);render()};
+document.getElementById("f-open").onclick=e=>{openAll=!openAll;e.currentTarget.setAttribute("aria-pressed",openAll);
+  openSet=openAll?new Set(G.map(g=>g[0])):new Set();render()};
+[["s-score","score"],["s-name","name"],["s-left","left"]].forEach(([el,v])=>{
+  document.getElementById(el).onclick=()=>{sortBy=v;
+    ["s-score","s-name","s-left"].forEach(x=>document.getElementById(x).setAttribute("aria-pressed",x===el));render()}});
+document.getElementById("reset").onclick=()=>{if(confirm("Obrisati sve oznake? MAL linkovi ostaju.")){done=new Set();persist();render()}};
+
+document.getElementById("note").innerHTML=
+ `<b>Kako linkovi rade.</b> Naslov vodi na MAL entry stranicu — MAL-Sync se tu sam ubaci i pokaže tvoj progres iz watchliste. Kvadratić levo je za štikliranje, tekst za otvaranje.<br><br>
+  <b>Provera poklapanja.</b> MAL ID-jeve traži Jikan po nazivu, pa pogrešno pogađanje nije isključeno. U tabu Naslovi piše na šta se svaki naslov mapirao; ako nešto ne valja, tapni naslov i pa <i>Ispravi MAL link</i>.<br><br>
+  <b>Gde se čuva.</b> Napredak se pamti po pregledaču i po lokaciji fajla, pa se oznake iz Claude prikaza i iz Firefoxa ne vide međusobno. Prebaci ih dugmadima <i>Izvezi</i> i <i>Uvezi</i>.<br><br>
+  <b>Nerazrešeno.</b> <code>7.19</code> u grupi 5 nema naslov u spisku, verovatno je 7.18 Raise wa Tanin ga Ii. Tensei Kizoku (<code>7.43</code>) je u spisku ali ga nema ni u jednoj grupi.`;
+
+(async()=>{done=new Set(await sGet(SKEY,[]));mal=await sGet(MKEY,{})||{};render()})();
+</script>
+</body>
+</html>
