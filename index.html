@@ -129,9 +129,12 @@ main{padding:0 14px}
 <main>
   <div class="toolbar">
     <button class="chip go-link" id="sync">Poveži sa MAL-om</button>
+    <button class="chip" id="gh">Sinhronizacija</button>
+    <button class="chip hidden" id="ghoff">Isključi</button>
     <button class="chip" id="exp">Izvezi</button>
     <button class="chip" id="imp">Uvezi</button>
     <span class="sync" id="syncmsg"></span>
+    <span class="sync" id="ghmsg"></span>
   </div>
   <section id="v-grupe">
     <div class="eyebrow">Sledeće na redu</div>
@@ -174,8 +177,8 @@ async function sSet(k,v){
   if(hasWS){try{await window.storage.set(k,JSON.stringify(v))}catch(e){}}
   if(hasLS){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 }
-const persist=()=>sSet(SKEY,[...done]);
-const persistMal=()=>sSet(MKEY,mal);
+const persist=()=>{sSet(SKEY,[...done]);schedulePush()};
+const persistMal=()=>{sSet(MKEY,mal);schedulePush()};
 const id=(g,i)=>g+"."+i;
 const gDone=g=>g[2].filter((_,i)=>done.has(id(g[0],i))).length;
 
@@ -230,6 +233,80 @@ async function syncAll(){
   msg.textContent=`Povezano ${ok}${fail?`, neuspešno ${fail}`:""}.`;
   btn.disabled=false;syncing=false;
 }
+/* ---- GitHub Gist sinhronizacija ---- */
+const GFILE="raspored-progress.json", GHKEY="raspored:gh";
+let gh=null, lastTs=0, pushT=null, pulling=false;
+function ghLoad(){try{const v=localStorage.getItem(GHKEY);return v?JSON.parse(v):null}catch(e){return null}}
+function ghSave(v){try{v?localStorage.setItem(GHKEY,JSON.stringify(v)):localStorage.removeItem(GHKEY)}catch(e){}}
+function ghStatus(t){document.getElementById("ghmsg").textContent=t}
+async function api(path,opts={}){
+  const r=await fetch("https://api.github.com"+path,{...opts,
+    headers:{Authorization:"Bearer "+gh.token,Accept:"application/vnd.github+json",...(opts.headers||{})}});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return r.json();
+}
+const payload=()=>JSON.stringify({ts:lastTs,done:[...done],mal});
+async function ghFindOrCreate(){
+  const list=await api("/gists?per_page=100");
+  const f=list.find(g=>g.files&&g.files[GFILE]);
+  if(f)return f.id;
+  lastTs=Date.now();
+  const c=await api("/gists",{method:"POST",body:JSON.stringify({
+    description:"Raspored — napredak gledanja",public:false,
+    files:{[GFILE]:{content:payload()}}})});
+  return c.id;
+}
+async function ghPull(){
+  const g=await api("/gists/"+gh.gistId), f=g.files&&g.files[GFILE];
+  if(!f)return null;
+  let c=f.content;
+  if(f.truncated&&f.raw_url)c=await(await fetch(f.raw_url)).text();
+  return JSON.parse(c);
+}
+async function ghPush(){
+  if(!gh)return;
+  lastTs=Date.now();
+  ghStatus("šaljem…");
+  try{await api("/gists/"+gh.gistId,{method:"PATCH",body:JSON.stringify({files:{[GFILE]:{content:payload()}}})});
+    ghStatus("sinhronizovano "+new Date().toLocaleTimeString("sr-RS",{hour:"2-digit",minute:"2-digit"}));
+  }catch(e){ghStatus("greška pri slanju")}
+}
+function schedulePush(){if(!gh)return;clearTimeout(pushT);pushT=setTimeout(ghPush,1500)}
+async function ghSync(adopt){
+  if(!gh||pulling)return;
+  pulling=true;ghStatus("proveravam…");
+  try{
+    const r=await ghPull();
+    if(r&&(adopt||(r.ts||0)>lastTs)){
+      done=new Set(r.done||[]);mal=r.mal||{};lastTs=r.ts||Date.now();
+      await sSet(SKEY,[...done]);await sSet(MKEY,mal);render();
+      ghStatus("preuzeto "+new Date(lastTs).toLocaleTimeString("sr-RS",{hour:"2-digit",minute:"2-digit"}));
+    }else ghStatus("sinhronizovano");
+  }catch(e){ghStatus("greška: "+e.message)}
+  pulling=false;
+}
+async function ghConnect(){
+  const t=prompt("Nalepi GitHub token (klasičan, samo 'gist' ovlašćenje):");
+  if(!t)return;
+  gh={token:t.trim(),gistId:null};
+  ghStatus("povezujem…");
+  try{
+    gh.gistId=await ghFindOrCreate();
+    const r=await ghPull();
+    if(r&&done.size&&(r.done||[]).length){
+      const spoji=confirm("Na GitHubu već postoji napredak.\n\nOK = spoji sa ovim što je na ovom uređaju\nOtkaži = uzmi verziju sa GitHuba");
+      if(spoji){(r.done||[]).forEach(x=>done.add(x));mal={...(r.mal||{}),...mal};lastTs=Date.now();
+        await sSet(SKEY,[...done]);await sSet(MKEY,mal);render();await ghPush()}
+      else await ghSync(true);
+    }else if(r&&(r.done||[]).length)await ghSync(true);
+    else await ghPush();
+    ghSave(gh);
+    document.getElementById("gh").textContent="Sinhronizuj sad";
+    document.getElementById("ghoff").classList.remove("hidden");
+  }catch(e){ghStatus("neuspešno: "+e.message);gh=null}
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)ghSync(false)});
+
 const malUrl=k=>mal[k]?`https://myanimelist.net/anime/${mal[k].id}`:null;
 async function openTitle(k,name){
   const u=malUrl(k);
@@ -328,6 +405,13 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   scrollTo(0,0);
 });
 document.getElementById("sync").onclick=syncAll;
+document.getElementById("gh").onclick=()=>gh?ghSync(false):ghConnect();
+document.getElementById("ghoff").onclick=()=>{
+  if(!confirm("Isključiti sinhronizaciju na ovom uređaju? Napredak ostaje, token se briše."))return;
+  gh=null;ghSave(null);ghStatus("isključeno");
+  document.getElementById("gh").textContent="Sinhronizacija";
+  document.getElementById("ghoff").classList.add("hidden");
+};
 document.getElementById("exp").onclick=()=>{
   prompt("Kopiraj ovaj tekst, pa ga na drugom uređaju nalepi u Uvezi:",JSON.stringify({d:[...done],m:mal}));
 };
@@ -350,10 +434,19 @@ document.getElementById("reset").onclick=()=>{if(confirm("Obrisati sve oznake? M
 document.getElementById("note").innerHTML=
  `<b>Kako linkovi rade.</b> Naslov vodi na MAL entry stranicu — MAL-Sync se tu sam ubaci i pokaže tvoj progres iz watchliste. Kvadratić levo je za štikliranje, tekst za otvaranje.<br><br>
   <b>Provera poklapanja.</b> MAL ID-jeve traži Jikan po nazivu, pa pogrešno pogađanje nije isključeno. U tabu Naslovi piše na šta se svaki naslov mapirao; ako nešto ne valja, tapni naslov i pa <i>Ispravi MAL link</i>.<br><br>
-  <b>Gde se čuva.</b> Napredak se pamti po pregledaču i po lokaciji fajla, pa se oznake iz Claude prikaza i iz Firefoxa ne vide međusobno. Prebaci ih dugmadima <i>Izvezi</i> i <i>Uvezi</i>.<br><br>
+  <b>Sinhronizacija.</b> Napredak se čuva u tajnom gistu na tvom GitHub nalogu i sam se prenosi između uređaja. Šalje se sekundu-dve posle svake promene, a preuzima kad se vratiš na stranicu. <i>Izvezi/Uvezi</i> i dalje rade kao rezerva.<br><br>
+  <b>Token nikad ne ide u repozitorijum.</b> Čuva se samo u ovom pregledaču, na ovom uređaju. Ako ga slučajno negde nalepiš u fajl, odmah ga opozovi na GitHubu.<br><br>
   <b>Nerazrešeno.</b> <code>7.19</code> u grupi 5 nema naslov u spisku, verovatno je 7.18 Raise wa Tanin ga Ii. Tensei Kizoku (<code>7.43</code>) je u spisku ali ga nema ni u jednoj grupi.`;
 
-(async()=>{done=new Set(await sGet(SKEY,[]));mal=await sGet(MKEY,{})||{};render()})();
+(async()=>{
+  done=new Set(await sGet(SKEY,[]));mal=await sGet(MKEY,{})||{};render();
+  gh=ghLoad();
+  if(gh&&gh.gistId){
+    document.getElementById("gh").textContent="Sinhronizuj sad";
+    document.getElementById("ghoff").classList.remove("hidden");
+    ghSync(true);
+  }
+})();
 </script>
 </body>
 </html>
