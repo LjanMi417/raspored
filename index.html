@@ -222,20 +222,36 @@ async function syncAll(){
   btn.disabled=true;
   const todo=resolvable.filter(t=>!mal[t.key]);
   if(!todo.length){msg.textContent="Sve je već povezano.";btn.disabled=false;syncing=false;return}
-  let ok=0,fail=0;
+  let ok=0,fail=0,gap=450,lastErr="",streak=0;
   for(let i=0;i<todo.length;i++){
     msg.textContent=`${i+1}/${todo.length} …`;
-    try{const r=await lookup(todo[i].name);if(r){mal[todo[i].key]=r;ok++}else fail++}
-    catch(e){
-      if(String(e.message).includes("429")){await sleep(2500);
-        try{const r=await lookup(todo[i].name);if(r){mal[todo[i].key]=r;ok++}else fail++}catch(e2){fail++}}
-      else fail++;
+    let got=false;
+    for(let a=0;a<3&&!got;a++){
+      try{
+        const r=await lookup(todo[i].name);
+        if(r){mal[todo[i].key]=r;ok++}else fail++;
+        got=true;streak=0;
+        if(gap>450)gap-=100;               // oporavak kad prodje glatko
+      }catch(e){
+        lastErr=String(e.message);streak++;
+        if(lastErr.includes("429")||lastErr.includes("500")){
+          gap=Math.min(gap+600,3000);      // uspori i probaj opet
+          await sleep(2000*(a+1));
+        }else{fail++;got=true}             // druga greska: preskoci naslov
+      }
     }
-    await sleep(350);
+    if(!got)fail++;
+    if(streak>=5){                          // sve pada - nema svrhe dalje
+      msg.textContent=`Prekinuto na ${i+1}/${todo.length}. Greška: ${lastErr||"mreža"}. Sačekaj par minuta pa pritisni ponovo — nastaviće odavde.`;
+      persistMal();render();btn.disabled=false;syncing=false;return;
+    }
+    await sleep(gap);
     if(i%8===0){persistMal();render()}
   }
   persistMal();render();
-  msg.textContent=`Povezano ${ok}${fail?`, neuspešno ${fail}`:""}.`;
+  msg.textContent = fail
+    ? `Povezano ${ok}, neuspešno ${fail}${lastErr?` (${lastErr})`:""}. Pritisni ponovo da probaš ostatak.`
+    : `Povezano ${ok}. Gotovo.`;
   btn.disabled=false;syncing=false;
 }
 /* ---- GitHub Gist sinhronizacija ---- */
