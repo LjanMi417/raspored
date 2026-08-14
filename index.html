@@ -216,41 +216,63 @@ async function lookup(name){
   return best?{id:best.mal_id,t:best.title}:null;
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function alBatch(names){
+  const vars={},parts=[];
+  names.forEach((n,k)=>{
+    vars["s"+k]=n.replace(/½/g,"1/2").replace(/\s*\(\d{4}\)\s*/," ").trim();
+    parts.push(`a${k}:Media(search:$s${k},type:ANIME){idMal title{romaji english}}`);
+  });
+  const decl=names.map((_,k)=>`$s${k}:String`).join(",");
+  const r=await fetch("https://graphql.anilist.co",{method:"POST",
+    headers:{"Content-Type":"application/json",Accept:"application/json"},
+    body:JSON.stringify({query:`query(${decl}){${parts.join(" ")}}`,variables:vars})});
+  if(!r.ok&&r.status!==404)throw new Error("AniList "+r.status);
+  const j=await r.json();
+  const d=j.data||{};
+  return names.map((_,k)=>{
+    const m=d["a"+k];
+    return m&&m.idMal?{id:m.idMal,t:(m.title&&(m.title.romaji||m.title.english))||("MAL "+m.idMal)}:null;
+  });
+}
 async function syncAll(){
   if(syncing)return; syncing=true;
   const btn=document.getElementById("sync"), msg=document.getElementById("syncmsg");
   btn.disabled=true;
   const todo=resolvable.filter(t=>!mal[t.key]);
   if(!todo.length){msg.textContent="Sve je već povezano.";btn.disabled=false;syncing=false;return}
-  let ok=0,fail=0,gap=450,lastErr="",streak=0;
-  for(let i=0;i<todo.length;i++){
-    msg.textContent=`${i+1}/${todo.length} …`;
+  let ok=0, rest=[], alErr="";
+
+  // 1) AniList, po 10 naslova u jednom zahtevu
+  for(let i=0;i<todo.length;i+=10){
+    const chunk=todo.slice(i,i+10);
+    msg.textContent=`AniList ${Math.min(i+10,todo.length)}/${todo.length} …`;
+    try{
+      const res=await alBatch(chunk.map(t=>t.name));
+      res.forEach((r,k)=>r?(mal[chunk[k].key]=r,ok++):rest.push(chunk[k]));
+    }catch(e){alErr=String(e.message);chunk.forEach(t=>rest.push(t))}
+    persistMal();render();
+    await sleep(800);
+  }
+
+  // 2) ostatak preko Jikana
+  let jFail=0, jErr="", streak=0;
+  for(let i=0;i<rest.length;i++){
+    msg.textContent=`Dopuna ${i+1}/${rest.length} …`;
     let got=false;
-    for(let a=0;a<3&&!got;a++){
-      try{
-        const r=await lookup(todo[i].name);
-        if(r){mal[todo[i].key]=r;ok++}else fail++;
+    for(let a=0;a<2&&!got;a++){
+      try{const r=await lookup(rest[i].name);
+        if(r){mal[rest[i].key]=r;ok++}else jFail++;
         got=true;streak=0;
-        if(gap>450)gap-=100;               // oporavak kad prodje glatko
-      }catch(e){
-        lastErr=String(e.message);streak++;
-        if(lastErr.includes("429")||lastErr.includes("500")){
-          gap=Math.min(gap+600,3000);      // uspori i probaj opet
-          await sleep(2000*(a+1));
-        }else{fail++;got=true}             // druga greska: preskoci naslov
-      }
+      }catch(e){jErr=String(e.message);streak++;await sleep(1200*(a+1))}
     }
-    if(!got)fail++;
-    if(streak>=5){                          // sve pada - nema svrhe dalje
-      msg.textContent=`Prekinuto na ${i+1}/${todo.length}. Greška: ${lastErr||"mreža"}. Sačekaj par minuta pa pritisni ponovo — nastaviće odavde.`;
-      persistMal();render();btn.disabled=false;syncing=false;return;
-    }
-    await sleep(gap);
-    if(i%8===0){persistMal();render()}
+    if(!got)jFail++;
+    if(streak>=4)break;
+    await sleep(500);
   }
   persistMal();render();
-  msg.textContent = fail
-    ? `Povezano ${ok}, neuspešno ${fail}${lastErr?` (${lastErr})`:""}. Pritisni ponovo da probaš ostatak.`
+  const missing=resolvable.filter(t=>!mal[t.key]).length;
+  msg.textContent = missing
+    ? `Povezano ${ok}, ostalo ${missing}${alErr?` · AniList: ${alErr}`:""}${jErr?` · Jikan: ${jErr}`:""}. Pritisni ponovo za ostatak.`
     : `Povezano ${ok}. Gotovo.`;
   btn.disabled=false;syncing=false;
 }
@@ -462,7 +484,7 @@ document.getElementById("reset").onclick=()=>{if(confirm("Obrisati sve oznake? M
 
 document.getElementById("note").innerHTML=
  `<b>Kako linkovi rade.</b> Naslov vodi na MAL entry stranicu — MAL-Sync se tu sam ubaci i pokaže tvoj progres iz watchliste. Kvadratić levo je za štikliranje, tekst za otvaranje.<br><br>
-  <b>Provera poklapanja.</b> MAL ID-jeve traži Jikan po nazivu, pa pogrešno pogađanje nije isključeno. U tabu Naslovi piše na šta se svaki naslov mapirao; ako nešto ne valja, tapni naslov i pa <i>Ispravi MAL link</i>.<br><br>
+  <b>Provera poklapanja.</b> MAL ID-jeve traži AniList po nazivu (Jikan je rezerva), pa pogrešno pogađanje nije isključeno. U tabu Naslovi piše na šta se svaki naslov mapirao; ako nešto ne valja, tapni naslov i pa <i>Ispravi MAL link</i>.<br><br>
   <b>Sinhronizacija.</b> Napredak se čuva u tajnom gistu na tvom GitHub nalogu i sam se prenosi između uređaja. Šalje se sekundu-dve posle svake promene, a preuzima kad se vratiš na stranicu. <i>Izvezi/Uvezi</i> i dalje rade kao rezerva.<br><br>
   <b>Token nikad ne ide u repozitorijum.</b> Čuva se samo u ovom pregledaču, na ovom uređaju. Ako ga slučajno negde nalepiš u fajl, odmah ga opozovi na GitHubu.<br><br>
   <b>Nerazrešeno.</b> <code>7.19</code> u grupi 5 nema naslov u spisku, verovatno je 7.18 Raise wa Tanin ga Ii. Tensei Kizoku (<code>7.43</code>) je u spisku ali ga nema ni u jednoj grupi.`;
