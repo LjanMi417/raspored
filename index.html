@@ -111,6 +111,12 @@ main{padding:0 14px}
 .hidden{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
+
+.watch{flex-shrink:0;display:inline-flex;align-items:center;gap:4px;margin-top:2px;
+  padding:0 9px;height:28px;border-radius:7px;cursor:pointer;text-decoration:none;
+  border:1px solid rgba(217,106,138,.45);background:rgba(217,106,138,.13);color:var(--rose);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+.watch:active{background:rgba(217,106,138,.26)}
 </style>
 </head>
 <body>
@@ -128,10 +134,12 @@ main{padding:0 14px}
 </header>
 <main>
   <div class="toolbar">
+    <button class="chip go-link" id="sync">Poveži sa MAL-om</button>
     <button class="chip" id="gh">Sinhronizacija</button>
     <button class="chip hidden" id="ghoff">Isključi</button>
     <button class="chip" id="exp">Izvezi</button>
     <button class="chip" id="imp">Uvezi</button>
+    <span class="sync" id="syncmsg"></span>
     <span class="sync" id="ghmsg"></span>
   </div>
   <section id="v-grupe">
@@ -158,11 +166,10 @@ main{padding:0 14px}
 </div>
 <script>
 const G=[[1,4574,[[688,"Seirei Gensouki 2",1,10],[705,"Kimi wa Meido-sama.",1,9],[707,"Nageki no Bourei wa Intai shitai",1,12],[787,"Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo 2nd Season",1,1],[815,"Ao no Hako",1,12],[872,"Chi. Chikyuu no Undou ni Tsuite",1,14]]],[2,4574,[[566,"Uzumaki",1,3],[740,"Maou 2099",1,11],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",1,12],[797,"Ranma ½ (2024)",1,12],[840,"Dandadan",1,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",1,9]]],[3,4574,[[655,"Hitoribocchi no Isekai Kouryaku",1,11],[714,"Ameku Takao no Suiri Karte",1,1],[750,"Blue Lock vs. U-20 Japan",1,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",1,10],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",1,12],[872,"Chi. Chikyuu no Undou ni Tsuite",2,14]]],[4,4574,[[654,"Kuroiwa Medaka ni Watashi no Kawaii ga Tsuujinai",1,1],[705,"Kimi wa Meido-sama.",2,9],[718,"Raise wa Tanin ga Ii",1,11],[815,"Ao no Hako",2,12],[840,"Dandadan",2,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",2,9]]],[5,4575,[[662,"Izure Saikyou no Renkinjutsushi?",1,2],[707,"Nageki no Bourei wa Intai shitai",2,12],[719,null,1,1],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",2,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",2,12],[872,"Chi. Chikyuu no Undou ni Tsuite",3,14]]],[6,4574,[[655,"Hitoribocchi no Isekai Kouryaku",2,11],[705,"Kimi wa Meido-sama.",3,9],[734,"Rekishi ni Nokoru Akujo ni Naru zo",1,9],[797,"Ranma ½ (2024)",2,12],[815,"Ao no Hako",3,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",1,12]]],[7,4574,[[566,"Uzumaki",2,3],[750,"Blue Lock vs. U-20 Japan",2,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",2,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",3,12],[840,"Dandadan",3,12],[872,"Chi. Chikyuu no Undou ni Tsuite",4,14]]],[8,4574,[[655,"Hitoribocchi no Isekai Kouryaku",3,11],[688,"Seirei Gensouki 2",2,10],[740,"Maou 2099",2,11],[797,"Ranma ½ (2024)",3,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",3,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",2,12]]],[9,4574,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",1,8],[718,"Raise wa Tanin ga Ii",2,11],[736,"Akuyaku Reijou Tensei Ojisan",1,1],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",3,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",4,12],[872,"Chi. Chikyuu no Undou ni Tsuite",5,14]]],[10,4575,[[655,"Hitoribocchi no Isekai Kouryaku",4,11],[705,"Kimi wa Meido-sama.",4,9],[750,"Blue Lock vs. U-20 Japan",3,13],[797,"Ranma ½ (2024)",4,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",4,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",3,9]]],[11,4574,[[688,"Seirei Gensouki 2",3,10],[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",2,8],[740,"Maou 2099",3,11],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",4,10],[815,"Ao no Hako",4,12],[872,"Chi. Chikyuu no Undou ni Tsuite",6,14]]],[12,4575,[[633,"Fuguushoku \"Kanteishi\" ga Jitsu wa Saikyou Datta",1,1],[658,"Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi",1,2],[750,"Blue Lock vs. U-20 Japan",4,13],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",5,12],[840,"Dandadan",4,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",3,12]]],[13,4575,[[655,"Hitoribocchi no Isekai Kouryaku",5,11],[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",3,8],[734,"Rekishi ni Nokoru Akujo ni Naru zo",2,9],[797,"Ranma ½ (2024)",5,12],[815,"Ao no Hako",5,12],[872,"Chi. Chikyuu no Undou ni Tsuite",7,14]]],[14,4574,[[705,"Kimi wa Meido-sama.",5,9],[707,"Nageki no Bourei wa Intai shitai",3,12],[718,"Raise wa Tanin ga Ii",3,11],[750,"Blue Lock vs. U-20 Japan",5,13],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",6,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",4,12]]],[15,4575,[[577,"Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite",1,2],[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",4,8],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",5,12],[815,"Ao no Hako",6,12],[840,"Dandadan",5,12],[852,"Ore dake Level Up na Ken Season 2: Arise from the Shadow",1,1]]],[16,4574,[[707,"Nageki no Bourei wa Intai shitai",4,12],[718,"Raise wa Tanin ga Ii",4,11],[734,"Rekishi ni Nokoru Akujo ni Naru zo",3,9],[750,"Blue Lock vs. U-20 Japan",6,13],[797,"Ranma ½ (2024)",6,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",5,12]]],[17,4575,[[655,"Hitoribocchi no Isekai Kouryaku",6,11],[705,"Kimi wa Meido-sama.",6,9],[740,"Maou 2099",4,11],[763,"Wind Breaker season 2",1,1],[840,"Dandadan",6,12],[872,"Chi. Chikyuu no Undou ni Tsuite",8,14]]],[18,4575,[[688,"Seirei Gensouki 2",4,10],[707,"Nageki no Bourei wa Intai shitai",5,12],[734,"Rekishi ni Nokoru Akujo ni Naru zo",4,9],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",6,12],[815,"Ao no Hako",7,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",4,9]]],[19,4575,[[655,"Hitoribocchi no Isekai Kouryaku",7,11],[718,"Raise wa Tanin ga Ii",5,11],[740,"Maou 2099",5,11],[750,"Blue Lock vs. U-20 Japan",7,13],[840,"Dandadan",7,12],[872,"Chi. Chikyuu no Undou ni Tsuite",9,14]]],[20,4574,[[577,"Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite",2,2],[734,"Rekishi ni Nokoru Akujo ni Naru zo",5,9],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",5,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",7,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",7,12],[891,"Kusuriya no Hitorigoto 2nd Season",1,1]]],[21,4575,[[655,"Hitoribocchi no Isekai Kouryaku",8,11],[705,"Kimi wa Meido-sama.",7,9],[718,"Raise wa Tanin ga Ii",6,11],[815,"Ao no Hako",8,12],[840,"Dandadan",8,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",5,9]]],[22,4575,[[662,"Izure Saikyou no Renkinjutsushi?",2,2],[734,"Rekishi ni Nokoru Akujo ni Naru zo",6,9],[750,"Blue Lock vs. U-20 Japan",8,13],[772,"Fire Force season 3",1,1],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",8,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",6,12]]],[23,4574,[[658,"Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi",2,2],[688,"Seirei Gensouki 2",5,10],[749,"Kono Kaisha ni Suki na Hito ga Imasu",1,1],[797,"Ranma ½ (2024)",7,12],[840,"Dandadan",9,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",6,9]]],[24,4575,[[634,"Around 40 Otoko no Isekai Tsuuhan",1,1],[740,"Maou 2099",6,11],[750,"Blue Lock vs. U-20 Japan",9,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",6,10],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",8,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",7,12]]],[25,4575,[[674,"Class no Daikirai na Joshi to Kekkon suru Koto ni Natta.",1,1],[707,"Nageki no Bourei wa Intai shitai",6,12],[718,"Raise wa Tanin ga Ii",7,11],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",9,12],[815,"Ao no Hako",9,12],[872,"Chi. Chikyuu no Undou ni Tsuite",10,14]]],[26,4575,[[688,"Seirei Gensouki 2",6,10],[734,"Rekishi ni Nokoru Akujo ni Naru zo",7,9],[740,"Maou 2099",7,11],[750,"Blue Lock vs. U-20 Japan",10,13],[795,"Jibaku Shounen Hanako-kun 2",1,1],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",8,12]]],[27,4575,[[655,"Hitoribocchi no Isekai Kouryaku",9,11],[707,"Nageki no Bourei wa Intai shitai",7,12],[718,"Raise wa Tanin ga Ii",8,11],[797,"Ranma ½ (2024)",8,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",9,12],[872,"Chi. Chikyuu no Undou ni Tsuite",11,14]]],[28,4574,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",5,8],[734,"Rekishi ni Nokoru Akujo ni Naru zo",8,9],[750,"Blue Lock vs. U-20 Japan",11,13],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",7,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",10,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",7,9]]],[29,4574,[[705,"Kimi wa Meido-sama.",8,9],[707,"Nageki no Bourei wa Intai shitai",8,12],[740,"Maou 2099",8,11],[757,"Zenshuu.",1,1],[797,"Ranma ½ (2024)",9,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",9,12]]],[30,4574,[[655,"Hitoribocchi no Isekai Kouryaku",10,11],[688,"Seirei Gensouki 2",7,10],[718,"Raise wa Tanin ga Ii",9,11],[815,"Ao no Hako",10,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",10,12],[872,"Chi. Chikyuu no Undou ni Tsuite",12,14]]],[31,4574,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",6,8],[707,"Nageki no Bourei wa Intai shitai",9,12],[740,"Maou 2099",9,11],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",8,10],[826,"Dr. Stone: Science Future",1,1],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",8,9]]],[32,4574,[[566,"Uzumaki",3,3],[688,"Seirei Gensouki 2",8,10],[797,"Ranma ½ (2024)",10,12],[815,"Ao no Hako",11,12],[840,"Dandadan",10,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",10,12]]],[33,4575,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",7,8],[707,"Nageki no Bourei wa Intai shitai",10,12],[718,"Raise wa Tanin ga Ii",10,11],[750,"Blue Lock vs. U-20 Japan",12,13],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",11,12],[872,"Chi. Chikyuu no Undou ni Tsuite",13,14]]],[34,4574,[[688,"Seirei Gensouki 2",9,10],[705,"Kimi wa Meido-sama.",9,9],[716,"Honey Lemon Soda",1,1],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",9,10],[840,"Dandadan",11,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",11,12]]],[35,4574,[[664,"Guild no Uketsukejou desu ga, Zangyou wa Iya nanode Boss wo Solo Toubatsu Shiyou to Omoimasu",1,1],[740,"Maou 2099",10,11],[742,"Watashi no Shiawase na Kekkon 2nd Season",1,1],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",11,12],[797,"Ranma ½ (2024)",11,12],[842,"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season",9,9]]],[36,4575,[[688,"Seirei Gensouki 2",10,10],[707,"Nageki no Bourei wa Intai shitai",11,12],[734,"Rekishi ni Nokoru Akujo ni Naru zo",9,9],[759,"Sakamoto Days",1,1],[815,"Ao no Hako",12,12],[872,"Chi. Chikyuu no Undou ni Tsuite",14,14]]],[37,4575,[[702,"Arifureta Shokugyou de Sekai Saikyou Season 3",8,8],[718,"Raise wa Tanin ga Ii",11,11],[740,"Maou 2099",11,11],[750,"Blue Lock vs. U-20 Japan",13,13],[797,"Ranma ½ (2024)",12,12],[868,"Bleach: Sennen Kessen-hen - Soukoku-tan",12,12]]],[38,4574,[[655,"Hitoribocchi no Isekai Kouryaku",11,11],[707,"Nageki no Bourei wa Intai shitai",12,12],[757,"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru",10,10],[789,"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen",12,12],[826,"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season",12,12],[840,"Dandadan",12,12]]]];
-const MALMAP={"Seirei Gensouki 2":{"id":50306,"t":"Seirei Gensouki 2"},"Kimi wa Meido-sama.":{"id":57611,"t":"Kimi wa Meido-sama."},"Nageki no Bourei wa Intai shitai":{"id":58172,"t":"Nageki no Bourei wa Intai shitai"},"Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo 2nd Season":{"id":57616,"t":"Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo 2nd Season"},"Ao no Hako":{"id":57181,"t":"Ao no Hako"},"Chi. Chikyuu no Undou ni Tsuite":{"id":52215,"t":"Chi. Chikyuu no Undou ni Tsuite"},"Uzumaki":{"id":40333,"t":"Uzumaki"},"Maou 2099":{"id":54853,"t":"Maou 2099"},"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen":{"id":57066,"t":"Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen"},"Ranma ½ (2024)":{"id":59145,"t":"Ranma ½ (2024)"},"Dandadan":{"id":57334,"t":"Dandadan"},"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season":{"id":54857,"t":"Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season"},"Hitoribocchi no Isekai Kouryaku":{"id":57891,"t":"Hitoribocchi no Isekai Kouryaku"},"Ameku Takao no Suiri Karte":{"id":58600,"t":"Ameku Takao no Suiri Karte"},"Blue Lock vs. U-20 Japan":{"id":54865,"t":"Blue Lock vs. U-20 Japan"},"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru":{"id":58714,"t":"Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru"},"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season":{"id":58572,"t":"Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season"},"Kuroiwa Medaka ni Watashi no Kawaii ga Tsuujinai":{"id":58853,"t":"Kuroiwa Medaka ni Watashi no Kawaii ga Tsuujinai"},"Raise wa Tanin ga Ii":{"id":56964,"t":"Raise wa Tanin ga Ii"},"Izure Saikyou no Renkinjutsushi?":{"id":58822,"t":"Izure Saikyou no Renkinjutsushi?"},"Rekishi ni Nokoru Akujo ni Naru zo":{"id":56228,"t":"Rekishi ni Nokoru Akujo ni Naru zo"},"Bleach: Sennen Kessen-hen - Soukoku-tan":{"id":56784,"t":"Bleach: Sennen Kessen-hen - Soukoku-tan"},"Arifureta Shokugyou de Sekai Saikyou Season 3":{"id":52995,"t":"Arifureta Shokugyou de Sekai Saikyou Season 3"},"Akuyaku Reijou Tensei Ojisan":{"id":57719,"t":"Akuyaku Reijou Tensei Ojisan"},"Fuguushoku \"Kanteishi\" ga Jitsu wa Saikyou Datta":{"id":59144,"t":"Fuguushoku \"Kanteishi\" ga Jitsu wa Saikyou Datta"},"Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi":{"id":59349,"t":"Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi"},"Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite":{"id":59002,"t":"Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite"},"Ore dake Level Up na Ken Season 2: Arise from the Shadow":{"id":58567,"t":"Ore dake Level Up na Ken Season 2: Arise from the Shadow"},"Wind Breaker season 2":{"id":59160,"t":"Wind Breaker Season 2"},"Kusuriya no Hitorigoto 2nd Season":{"id":58514,"t":"Kusuriya no Hitorigoto 2nd Season"},"Fire Force season 3":{"id":51818,"t":"Enen no Shouboutai: San no Shou"},"Kono Kaisha ni Suki na Hito ga Imasu":{"id":59361,"t":"Kono Kaisha ni Suki na Hito ga Imasu"},"Around 40 Otoko no Isekai Tsuuhan":{"id":59561,"t":"Around 40 Otoko no Isekai Tsuuhan"},"Class no Daikirai na Joshi to Kekkon suru Koto ni Natta.":{"id":59135,"t":"Class no Daikirai na Joshi to Kekkon suru Koto ni Natta."},"Jibaku Shounen Hanako-kun 2":{"id":53924,"t":"Jibaku Shounen Hanako-kun 2"},"Zenshuu.":{"id":58502,"t":"Zenshuu."},"Dr. Stone: Science Future":{"id":57592,"t":"Dr. Stone: Science Future"},"Honey Lemon Soda":{"id":58271,"t":"Honey Lemon Soda"},"Guild no Uketsukejou desu ga, Zangyou wa Iya nanode Boss wo Solo Toubatsu Shiyou to Omoimasu":{"id":55997,"t":"Guild no Uketsukejou desu ga, Zangyou wa Iya nanode Boss wo Solo Toubatsu Shiyou to Omoimasu"},"Watashi no Shiawase na Kekkon 2nd Season":{"id":56701,"t":"Watashi no Shiawase na Kekkon 2nd Season"},"Sakamoto Days":{"id":58939,"t":"Sakamoto Days"}};
 const dec=s=>(s/100).toFixed(2);
 const SKEY="raspored:v2", MKEY="raspored:mal", TKEY="raspored:ts";
 let done=new Set(), memD=null, memM=null, openSet=new Set(), openT=new Set(), mal={};
-let hideDone=false, openAll=false, sortBy="score";
+let hideDone=false, openAll=false, sortBy="score", syncing=false;
 
 const hasWS=typeof window.storage!=="undefined"&&window.storage&&typeof window.storage.get==="function";
 let hasLS=false;try{localStorage.setItem("__t","1");localStorage.removeItem("__t");hasLS=true}catch(e){}
@@ -191,6 +198,72 @@ const titleIndex=(()=>{
   }));
   return [...m.values()];
 })();
+const resolvable=titleIndex.filter(t=>!t.unk);
+const AK={"Akuyaku Reijou Tensei Ojisan": "from-bureaucrat-to-villainess-dad-s-been-reincarnated-n0t3i", "Ameku Takao no Suiri Karte": "ameku-m-d-doctor-detective-0krqw", "Ao no Hako": "blue-box-ddjdm", "Arifureta Shokugyou de Sekai Saikyou Season 3": "arifureta-from-commonplace-to-world-s-strongest-season-3-msbsl", "Around 40 Otoko no Isekai Tsuuhan": "the-daily-life-of-a-middle-aged-online-shopper-in-another-world-1nfny", "Bleach: Sennen Kessen-hen - Soukoku-tan": "bleach-thousand-year-blood-war-the-conflict-sqamb", "Blue Lock vs. U-20 Japan": "blue-lock-season-2-54rmn", "Chi. Chikyuu no Undou ni Tsuite": "about-the-movement-of-the-earth-uocpp", "Class no Daikirai na Joshi to Kekkon suru Koto ni Natta.": "i-m-getting-married-to-a-girl-i-hate-in-my-class-g1vgv", "Dandadan": "dandadan-lzcmw", "Dr. Stone: Science Future": "dr-stone-science-future-part-2-4qusz", "Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka V: Houjou no Megami-hen": "is-it-wrong-to-try-to-pick-up-girls-in-a-dungeon-v-6rggy", "Fire Force season 3": "fire-force-season-3-eq5bx", "Fuguushoku \"Kanteishi\" ga Jitsu wa Saikyou Datta": "even-given-the-worthless-appraiser-class-i-m-actually-the-strongest-jekj1", "Guild no Uketsukejou desu ga, Zangyou wa Iya nanode Boss wo Solo Toubatsu Shiyou to Omoimasu": "i-may-be-a-guild-receptionist-but-i-ll-solo-any-boss-to-clock-out-on-time-vxmbv", "Hazure Skill \"Kinomi Master\": Skill no Mi (Tabetara Shinu) wo Mugen ni Taberareru You ni Natta Ken ni Tsuite": "bogus-skill-fruitmaster-about-that-time-i-became-able-to-eat-unlimited-numbers-of-skill-fruits-that-kill-you-0oyvn", "Hitoribocchi no Isekai Kouryaku": "loner-life-in-another-world-g9rqp", "Honey Lemon Soda": "honey-lemon-soda-dzceb", "Izure Saikyou no Renkinjutsushi?": "possibly-the-greatest-alchemist-of-all-time-0wzig", "Jibaku Shounen Hanako-kun 2": "toilet-bound-hanako-kun-season-2-part-2-jhk9o", "Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo 2nd Season": "the-100-girlfriends-who-really-really-really-really-really-love-you-season-2-zlcut", "Kimi wa Meido-sama.": "you-are-ms-servant-jjzu1", "Kono Kaisha ni Suki na Hito ga Imasu": "can-you-keep-a-secret-sak2m", "Kuroiwa Medaka ni Watashi no Kawaii ga Tsuujinai": "medaka-kuroiwa-is-impervious-to-my-charms-85ysb", "Kusuriya no Hitorigoto 2nd Season": "the-apothecary-diaries-season-2-owtv9", "Maou 2099": "demon-lord-2099-btxu4", "Nageki no Bourei wa Intai shitai": "let-this-grieving-soul-retire-8cmhy", "Ore dake Level Up na Ken Season 2: Arise from the Shadow": "solo-leveling-season-2-arise-from-the-shadow-3eukp", "Raise wa Tanin ga Ii": "yakuza-fiance-v5vma", "Ranma \u00bd (2024)": "ranma-1-2-team-ranma-vs-the-legendary-phoenix-ipl3u", "Re:Zero kara Hajimeru Isekai Seikatsu 3rd Season": "re-zero-starting-life-in-another-world-season-3-6bjrx", "Rekishi ni Nokoru Akujo ni Naru zo": "i-ll-become-a-villainess-who-goes-down-in-history-gxm6y", "Saikyou no Shienshoku \"Wajutsushi\" de Aru Ore wa Sekai Saikyou Clan wo Shitagaeru": "the-most-notorious-talker-runs-the-world-s-greatest-clan-f5eah", "Sakamoto Days": "sakamoto-days-part-2-ychi1", "Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi": "headhunted-to-another-world-from-salaryman-to-big-four-bokvw", "Seirei Gensouki 2": "seirei-gensouki-spirit-chronicles-season-2-cwqvz", "Shangri-La Frontier: Kusoge Hunter, Kamige ni Idoman to su 2nd Season": "shangri-la-frontier-season-2-sagjv", "Uzumaki": "uzumaki-spiral-into-horror-dmsjo", "Watashi no Shiawase na Kekkon 2nd Season": "my-happy-marriage-season-2-jqhxb", "Wind Breaker season 2": "wind-breaker-season-2-pqi0m", "Zenshuu.": "zenshu-xwiaj"};
+const akUrl=(k,ep)=>AK&&AK[k]?`https://anikototv.to/watch/${AK[k]}/ep-${ep}`:null;
+const akBtn=(k,ep)=>k&&!k.startsWith('??')&&akUrl(k,ep)?`<a class="watch" href="${akUrl(k,ep)}" target="_blank" rel="noopener" title="Gledaj ep ${ep} na anikototv.to">\u25B6 ep ${ep}</a>`:``;
+
+
+/* ---- Jikan ---- */
+const norm=s=>(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+function sim(a,b){
+  const A=new Set(norm(a).split(" ")), B=norm(b).split(" ");
+  if(!B.length)return 0;
+  return B.filter(w=>A.has(w)).length/Math.max(A.size,B.length);
+}
+async function lookup(name){
+  const q=name.replace(/½/g,"1 2").replace(/\s*\(\d{4}\)\s*/," ").replace(/["]/g,"");
+  const r=await fetch("https://api.jikan.moe/v4/anime?limit=6&q="+encodeURIComponent(q));
+  if(!r.ok)throw new Error(r.status);
+  const j=await r.json();
+  if(!j.data||!j.data.length)return null;
+  let best=null,bs=-1;
+  for(const a of j.data){
+    const cands=[a.title,a.title_english,a.title_japanese,...(a.titles||[]).map(t=>t.title),...(a.title_synonyms||[])];
+    const s=Math.max(...cands.filter(Boolean).map(c=>sim(name,c)));
+    if(s>bs){bs=s;best=a}
+  }
+  return best?{id:best.mal_id,t:best.title}:null;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function syncAll(){
+  if(syncing)return; syncing=true;
+  const btn=document.getElementById("sync"), msg=document.getElementById("syncmsg");
+  btn.disabled=true;
+  const todo=resolvable.filter(t=>!mal[t.key]);
+  if(!todo.length){msg.textContent="Sve je već povezano.";btn.disabled=false;syncing=false;return}
+  let ok=0,fail=0,gap=450,lastErr="",streak=0;
+  for(let i=0;i<todo.length;i++){
+    msg.textContent=`${i+1}/${todo.length} …`;
+    let got=false;
+    for(let a=0;a<3&&!got;a++){
+      try{
+        const r=await lookup(todo[i].name);
+        if(r){mal[todo[i].key]=r;ok++}else fail++;
+        got=true;streak=0;
+        if(gap>450)gap-=100;               // oporavak kad prodje glatko
+      }catch(e){
+        lastErr=String(e.message);streak++;
+        if(lastErr.includes("429")||lastErr.includes("500")){
+          gap=Math.min(gap+600,3000);      // uspori i probaj opet
+          await sleep(2000*(a+1));
+        }else{fail++;got=true}             // druga greska: preskoci naslov
+      }
+    }
+    if(!got)fail++;
+    if(streak>=5){                          // sve pada - nema svrhe dalje
+      msg.textContent=`Prekinuto na ${i+1}/${todo.length}. Greška: ${lastErr||"mreža"}. Sačekaj par minuta pa pritisni ponovo — nastaviće odavde.`;
+      persistMal();render();btn.disabled=false;syncing=false;return;
+    }
+    await sleep(gap);
+    if(i%8===0){persistMal();render()}
+  }
+  persistMal();render();
+  msg.textContent = fail
+    ? `Povezano ${ok}, neuspešno ${fail}${lastErr?` (${lastErr})`:""}. Pritisni ponovo da probaš ostatak.`
+    : `Povezano ${ok}. Gotovo.`;
+  btn.disabled=false;syncing=false;
+}
 /* ---- GitHub Gist sinhronizacija ---- */
 const GFILE="raspored-progress.json", GHKEY="raspored:gh";
 let gh=null, lastTs=0, pushT=null, pulling=false;
@@ -203,8 +276,7 @@ async function api(path,opts={}){
   if(!r.ok)throw new Error("HTTP "+r.status);
   return r.json();
 }
-const onlyManual=o=>Object.fromEntries(Object.entries(o).filter(([,v])=>v&&v.manual));
-const payload=()=>JSON.stringify({ts:lastTs,done:[...done],mal:onlyManual(mal)});
+const payload=()=>JSON.stringify({ts:lastTs,done:[...done],mal});
 async function ghFindOrCreate(){
   const list=await api("/gists?per_page=100");
   const f=list.find(g=>g.files&&g.files[GFILE]);
@@ -238,7 +310,7 @@ async function ghSync(){
     if(!r){await ghPush();pulling=false;return}
     const rts=r.ts||0, rmal=r.mal||{}, before=JSON.stringify(mal);
     // MAL veze se uvek spajaju - nijedna strana ih ne brise
-    mal = rts>lastTs ? {...mal,...onlyManual(rmal)} : {...onlyManual(rmal),...mal};
+    mal = rts>lastTs ? {...mal,...rmal} : {...rmal,...mal};
     if(rts>lastTs){
       done=new Set(r.done||[]); lastTs=rts;
       try{localStorage.setItem(TKEY,String(lastTs))}catch(e){}
@@ -248,7 +320,7 @@ async function ghSync(){
     if(JSON.stringify(mal)!==before){await sSet(MKEY,mal)}
     render();
     // lokalno novije ili ima veza kojih nema gore -> posalji
-    if(rts<lastTs||Object.keys(onlyManual(mal)).length>Object.keys(rmal).length)await ghPush();
+    if(rts<lastTs||Object.keys(mal).length>Object.keys(rmal).length)await ghPush();
   }catch(e){ghStatus("greška: "+e.message)}
   pulling=false;
 }
@@ -262,7 +334,7 @@ async function ghConnect(){
     const r=await ghPull();
     if(r&&done.size&&(r.done||[]).length){
       const spoji=confirm("Na GitHubu već postoji napredak.\n\nOK = spoji sa ovim što je na ovom uređaju\nOtkaži = uzmi verziju sa GitHuba");
-      if(spoji){(r.done||[]).forEach(x=>done.add(x));mal={...onlyManual(r.mal||{}),...mal};stamp();
+      if(spoji){(r.done||[]).forEach(x=>done.add(x));mal={...(r.mal||{}),...mal};stamp();
         await sSet(SKEY,[...done]);await sSet(MKEY,mal);render();await ghPush()}
       else{lastTs=0;await ghSync()}
     }else if(r&&(r.done||[]).length){lastTs=0;await ghSync()}
@@ -275,6 +347,15 @@ async function ghConnect(){
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)ghSync()});
 
 const malUrl=k=>mal[k]?`https://myanimelist.net/anime/${mal[k].id}`:null;
+async function openTitle(k,name){
+  const u=malUrl(k);
+  if(u)return window.open(u,"_blank","noopener");
+  const w=window.open("about:blank","_blank");
+  try{const r=await lookup(name);
+    if(r){mal[k]=r;persistMal();render();if(w)w.location=`https://myanimelist.net/anime/${r.id}`;else window.open(`https://myanimelist.net/anime/${r.id}`,"_blank")}
+    else if(w)w.location="https://myanimelist.net/search/all?q="+encodeURIComponent(name);
+  }catch(e){if(w)w.location="https://myanimelist.net/search/all?q="+encodeURIComponent(name)}
+}
 
 /* ---- render ---- */
 function rowHTML(g,r,i){
@@ -286,7 +367,8 @@ function rowHTML(g,r,i){
     <button class="tick" data-slot="${id(g[0],i)}" aria-label="Odgledano"><span class="box"></span></button>
     ${unk?`<span class="go">${inner}</span>`
       :u?`<a class="go link" href="${u}" target="_blank" rel="noopener">${inner}</a>`
-        :`<span class="go">${inner}</span>`}
+        :`<button class="go link" data-open="${encodeURIComponent(k)}">${inner}</button>`}
+    ${akBtn(k,r[2])}
   </div>`;
 }
 function cardHTML(g,hero){
@@ -304,6 +386,8 @@ function render(){
   const tot=G.reduce((a,g)=>a+g[2].length,0), d=done.size;
   document.getElementById("count").textContent=`${d}/${tot} odgledano`;
   document.getElementById("bar").style.width=(d/tot*100)+"%";
+  const linked=resolvable.filter(t=>mal[t.key]).length;
+  document.getElementById("sync").textContent=linked?`MAL ${linked}/${resolvable.length}`:"Poveži sa MAL-om";
 
   const hero=G.find(g=>gDone(g)<6);
   document.getElementById("hero").innerHTML=hero?cardHTML(hero,true):`<div class="empty">Sve grupe su završene.</div>`;
@@ -320,7 +404,7 @@ function render(){
     const m=mal[t.key], u=malUrl(t.key);
     const inner=`<span class="tname">${t.unk?"Naslov nije u spisku "+t.score:t.name}${t.unk?"":`<span class="arw">↗</span>`}
         <span class="tprog"><span class="ep">${w}/${n}</span><span class="mini"><i style="width:${w/n*100}%"></i></span></span>
-        ${m?`<span class="mal">MAL: <b>${m.t}</b></span>`:t.unk?"":""}</span>
+        ${m?`<span class="mal">MAL: <b>${m.t}</b></span>`:t.unk?"":`<span class="mal">nije povezano</span>`}</span>
       <span class="score">${dec(t.score)}</span>`;
     return `<div class="trow">
       <div class="t ${w===n?"on":""} ${t.unk?"unk":""} ${u?"ready":""}">
@@ -328,7 +412,8 @@ function render(){
           <span class="box" style="${w>0&&w<n?"background:var(--amber);border-color:var(--amber)":""}"></span></button>
         ${t.unk?`<span class="go">${inner}</span>`
           :u?`<a class="go link" href="${u}" target="_blank" rel="noopener">${inner}</a>`
-            :`<span class="go">${inner}</span>`}
+            :`<button class="go link" data-open="${encodeURIComponent(t.key)}">${inner}</button>`}
+        ${akBtn(t.key, (()=>{const nw=t.slots.find(s=>!done.has(id(s[0],s[1])));return nw?nw[2]:t.slots[t.slots.length-1][2]})())}
       </div>
       ${op?`<div class="eps">${t.slots.map(s=>`<button class="epc ${done.has(id(s[0],s[1]))?"on":""}" data-slot="${id(s[0],s[1])}">G${s[0]} · ${s[2]}</button>`).join("")}</div>
         ${t.unk?"":`<button class="fix" data-fix="${encodeURIComponent(t.key)}">Ispravi MAL link</button>`}`:""}
@@ -336,10 +421,13 @@ function render(){
   }).join("");
 }
 document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]");
+  if(o){e.preventDefault();const k=decodeURIComponent(o.dataset.open);
+    const t=titleIndex.find(x=>x.key===k);return openTitle(k,t.name)}
   const f=e.target.closest("[data-fix]");
   if(f){const k=decodeURIComponent(f.dataset.fix);
     const v=prompt("Nalepi MAL link ili unesi ID:",mal[k]?`https://myanimelist.net/anime/${mal[k].id}`:"");
-    if(v){const m=v.match(/(\d{2,7})/);if(m){mal[k]={id:m[1],t:"ručno ("+m[1]+")",manual:true};persistMal();render()}}
+    if(v){const m=v.match(/(\d{2,7})/);if(m){mal[k]={id:m[1],t:"ručno ("+m[1]+")"};persistMal();render()}}
     return}
   const h=e.target.closest("[data-toggle]");
   if(h){const i=+h.dataset.toggle;openSet.has(i)?openSet.delete(i):openSet.add(i);return render()}
@@ -357,6 +445,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.getElementById("v-naslovi").classList.toggle("hidden",t.dataset.view!=="naslovi");
   scrollTo(0,0);
 });
+document.getElementById("sync").onclick=syncAll;
 document.getElementById("gh").onclick=()=>gh?ghSync():ghConnect();
 document.getElementById("ghoff").onclick=()=>{
   if(!confirm("Isključiti sinhronizaciju na ovom uređaju? Napredak ostaje, token se briše."))return;
@@ -371,8 +460,8 @@ document.getElementById("imp").onclick=()=>{
   const v=prompt("Nalepi izvezeni tekst:");if(!v)return;
   try{const o=JSON.parse(v);
     if(Array.isArray(o.d)){done=new Set(o.d);persist()}
-    if(o.m&&typeof o.m==="object"){mal={...MALMAP,...onlyManual(o.m)};persistMal()}
-    render();ghStatus("uvezeno");
+    if(o.m&&typeof o.m==="object"){mal=o.m;persistMal()}
+    render();document.getElementById("syncmsg").textContent="Uvezeno.";
   }catch(e){alert("Tekst nije ispravan.")}
 };
 document.getElementById("f-hide").onclick=e=>{hideDone=!hideDone;e.currentTarget.setAttribute("aria-pressed",hideDone);render()};
@@ -385,17 +474,13 @@ document.getElementById("reset").onclick=()=>{if(confirm("Obrisati sve oznake? M
 
 document.getElementById("note").innerHTML=
  `<b>Kako linkovi rade.</b> Naslov vodi na MAL entry stranicu — MAL-Sync se tu sam ubaci i pokaže tvoj progres iz watchliste. Kvadratić levo je za štikliranje, tekst za otvaranje.<br><br>
-  <b>MAL linkovi.</b> ID-jevi su ugrađeni u stranicu, pa klik radi odmah i ne zavisi ni od jednog servisa. Ako neki naslov ipak vodi na pogrešnu stranicu, tapni ga u tabu Naslovi pa <i>Ispravi MAL link</i> — ručna ispravka se pamti i prenosi na druge uređaje.<br><br>
+  <b>Provera poklapanja.</b> MAL ID-jeve traži Jikan po nazivu, pa pogrešno pogađanje nije isključeno. U tabu Naslovi piše na šta se svaki naslov mapirao; ako nešto ne valja, tapni naslov i pa <i>Ispravi MAL link</i>.<br><br>
   <b>Sinhronizacija.</b> Napredak se čuva u tajnom gistu na tvom GitHub nalogu i sam se prenosi između uređaja. Šalje se sekundu-dve posle svake promene, a preuzima kad se vratiš na stranicu. <i>Izvezi/Uvezi</i> i dalje rade kao rezerva.<br><br>
   <b>Token nikad ne ide u repozitorijum.</b> Čuva se samo u ovom pregledaču, na ovom uređaju. Ako ga slučajno negde nalepiš u fajl, odmah ga opozovi na GitHubu.<br><br>
   <b>Nerazrešeno.</b> <code>7.19</code> u grupi 5 nema naslov u spisku, verovatno je 7.18 Raise wa Tanin ga Ii. Tensei Kizoku (<code>7.43</code>) je u spisku ali ga nema ni u jednoj grupi.`;
 
 (async()=>{
-  done=new Set(await sGet(SKEY,[]));
-  const saved=await sGet(MKEY,{})||{};
-  mal={...MALMAP};
-  Object.keys(saved).forEach(k=>{if(saved[k]&&saved[k].manual)mal[k]=saved[k]});
-  render();
+  done=new Set(await sGet(SKEY,[]));mal=await sGet(MKEY,{})||{};render();
   try{lastTs=+localStorage.getItem(TKEY)||0}catch(e){}
   gh=ghLoad();
   if(gh&&gh.gistId){
